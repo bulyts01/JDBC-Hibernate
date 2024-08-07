@@ -21,21 +21,24 @@ public class UserDaoJDBCImpl implements UserDao {
     public static final String DROP_TABLE_SQL = """
             DROP TABLE IF EXISTS users
             """;
-    public static final String sql = """
+    public static final String CREATE_TABLE = """
             CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
             name VARCHAR(128) NOT NULL,
             last_name VARCHAR(128) NOT NULL,
             age INT NOT NULL)                
             """;
+    public static final String GET_ALL_USER = """            
+            SELECT * FROM users
+            """;
+    private static final String DELETE_ALL_USERS_SQL = """
+            TRUNCATE TABLE users
+            """;
     private static final String UPDATE_SQL = """
             UPDATE users
             SET name = ?,
             last_name = ?,
             age = ?
-            """;
-    public static final String GET_ALL_USER = """            
-            SELECT * FROM users
             """;
 
     public UserDaoJDBCImpl() {
@@ -44,7 +47,7 @@ public class UserDaoJDBCImpl implements UserDao {
     public void createUsersTable() {
         try (var connection = Util.open();
              var statement = connection.createStatement()) {
-            statement.execute(sql);
+            statement.execute(CREATE_TABLE);
             System.out.println("Таблица users создана!");
         } catch (SQLException e) {
             throw new DaoException(e);
@@ -72,7 +75,6 @@ public class UserDaoJDBCImpl implements UserDao {
         } catch (SQLException e) {
             throw new DaoException(e);
         }
-
     }
 
     public void removeUserById(long id) {
@@ -88,17 +90,13 @@ public class UserDaoJDBCImpl implements UserDao {
     public List<User> getAllUsers() {
         List<User> result = new ArrayList<>();
         try (var connection = Util.open();
-             var statement = connection.createStatement()) {
-            var resultSet = statement.executeQuery(GET_ALL_USER);
+             var preparedStatement = connection.prepareStatement(GET_ALL_USER)) {
+            var resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
                 User user = new User(resultSet.getString("name"),
                         resultSet.getString("last_name"), resultSet.getByte("age"));
                 user.setId(resultSet.getLong("id"));
                 result.add(user);
-
-
-//                result.add(new User(resultSet.getString("name"),
-//                        resultSet.getString("last_name"), resultSet.getByte("age")));
             }
         } catch (SQLException throwables) {
             throw new DaoException(throwables);
@@ -107,6 +105,12 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public void cleanUsersTable() {
-
+        try (var connection = Util.open();
+             var statement = connection.prepareStatement(DELETE_ALL_USERS_SQL)) {
+            statement.executeUpdate();
+            System.out.println("Все записи удалены!");
+        } catch (SQLException e) {
+            throw new DaoException(e);
+        }
     }
 }
