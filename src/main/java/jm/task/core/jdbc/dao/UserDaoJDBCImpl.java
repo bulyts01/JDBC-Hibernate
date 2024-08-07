@@ -1,32 +1,109 @@
 package jm.task.core.jdbc.dao;
 
+import jm.task.core.jdbc.exception.DaoException;
 import jm.task.core.jdbc.model.User;
+import jm.task.core.jdbc.util.Util;
 
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class UserDaoJDBCImpl implements UserDao {
-    public UserDaoJDBCImpl() {
 
+    private static final String DELETE_SQL = """
+            DELETE FROM users
+            WHERE id = ?
+            """;
+    public static final String SAVE_USER_SQL = """
+            INSERT INTO users (name, last_name, age)
+            VALUES (?, ?, ?)
+            """;
+    public static final String DROP_TABLE_SQL = """
+            DROP TABLE IF EXISTS users
+            """;
+    public static final String sql = """
+            CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(128) NOT NULL,
+            last_name VARCHAR(128) NOT NULL,
+            age INT NOT NULL)                
+            """;
+    private static final String UPDATE_SQL = """
+            UPDATE users
+            SET name = ?,
+            last_name = ?,
+            age = ?
+            """;
+    public static final String GET_ALL_USER = """            
+            SELECT * FROM users
+            """;
+
+    public UserDaoJDBCImpl() {
     }
 
     public void createUsersTable() {
-
+        try (var connection = Util.open();
+             var statement = connection.createStatement()) {
+            statement.execute(sql);
+            System.out.println("Таблица users создана!");
+        } catch (SQLException e) {
+            throw new DaoException(e);
+        }
     }
 
     public void dropUsersTable() {
-
+        try (var connection = Util.open();
+             var statement = connection.createStatement()) {
+            statement.execute(DROP_TABLE_SQL);
+            System.out.println("Таблица users дропнута!");
+        } catch (SQLException e) {
+            throw new DaoException(e);
+        }
     }
 
     public void saveUser(String name, String lastName, byte age) {
+        try (var connection = Util.open();
+             var preparedStatement = connection.prepareStatement(SAVE_USER_SQL)) {
+            preparedStatement.setString(1, name);
+            preparedStatement.setString(2, lastName);
+            preparedStatement.setByte(3, age);
+            preparedStatement.executeUpdate();
+            System.out.println("User added");
+        } catch (SQLException e) {
+            throw new DaoException(e);
+        }
 
     }
 
     public void removeUserById(long id) {
-
+        try (var connection = Util.open();
+             var preparedStatement = connection.prepareStatement(DELETE_SQL)) {
+            preparedStatement.setLong(1, id);
+            preparedStatement.executeUpdate();
+        } catch (SQLException throwables) {
+            throw new DaoException(throwables);
+        }
     }
 
     public List<User> getAllUsers() {
-        return null;
+        List<User> result = new ArrayList<>();
+        try (var connection = Util.open();
+             var statement = connection.createStatement()) {
+            var resultSet = statement.executeQuery(GET_ALL_USER);
+            while (resultSet.next()) {
+                User user = new User(resultSet.getString("name"),
+                        resultSet.getString("last_name"), resultSet.getByte("age"));
+                user.setId(resultSet.getLong("id"));
+                result.add(user);
+
+
+//                result.add(new User(resultSet.getString("name"),
+//                        resultSet.getString("last_name"), resultSet.getByte("age")));
+            }
+        } catch (SQLException throwables) {
+            throw new DaoException(throwables);
+        }
+        return result;
     }
 
     public void cleanUsersTable() {
