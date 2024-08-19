@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="aspectjweaver-1.9.22.1">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../10 Spring/aspectjweaver-1.9.22.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../10 Spring/postgresql-42.7.3.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
