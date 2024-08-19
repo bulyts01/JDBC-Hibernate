@@ -68,7 +68,6 @@ public class UserDaoHibernateImpl implements UserDao {
 //            System.out.println("User removed");
 
             session.getTransaction().commit();
-
         }
     }
 

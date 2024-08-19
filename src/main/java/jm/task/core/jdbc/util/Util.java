@@ -43,6 +43,7 @@ public final class Util {
             throw new RuntimeException(e);
         }
     }
+
     public static SessionFactory getSessionFactory() {
         try {
             Configuration configuration = new Configuration()
